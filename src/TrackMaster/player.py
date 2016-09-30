@@ -1,14 +1,12 @@
 import time
 import threading
-import numpy as np
 
 import pyaudio
+import numpy as np
 
+_v = np.__version__
 __all__ = ["Player"]
 
-class waveloader(object):
-
-    pass
 
 class Player(object):
     def __init__(self, buffer, chunk_size=None, rate=None, live=None):
@@ -16,18 +14,33 @@ class Player(object):
         self.buffer_size = buffer.size / 2
         assert chunk_size < self.buffer_size
         assert buffer.dtype == np.float32
-        self.buffer = buffer
+        self.org_buffer = np.asarray(buffer)
         self.chunk_size = chunk_size
-        self.live = live
+        # self.live = live
         self.paused = False
         self.i = 0
 
+        # buffer
+        self.now_buffer_index = 0
+        self.front_buffer = self.org_buffer[:self.buffer_size]
+        self.back_buffer = self.org_buffer[self.buffer_size:]
+        self.buffers = [self.front_buffer, self.back_buffer]
+        # init buffer
+        self.buffer = self.front_buffer
+
+    # def _orgn_swap_buffers(self):
+    #     if self.live:
+    #         b0 = self.buffer[:self.buffer_size]
+    #     else:
+    #         b0 = np.zeros(self.buffer_size, dtype=np.float32)
+    #     self.buffer[:self.buffer_size], self.buffer[self.buffer_size:] = self.buffer[self.buffer_size:], b0
+
     def _swap_buffers(self):
-        if self.live:
-            b0 = self.buffer[:self.buffer_size]
-        else:
-            b0 = np.zeros(self.buffer_size, dtype=np.float32)
-        self.buffer[:self.buffer_size], self.buffer[self.buffer_size:] = self.buffer[self.buffer_size:], b0
+        self.now_buffer_index = int(not self.now_buffer_index)
+        self.buffer = self.buffers[self.now_buffer_index]
+
+    def _reset_buffer(self):
+        self.buffer = self.buffers[self.now_buffer_index]
 
     def _play_chunk(self):
         chunk = self.buffer[self.i:self.i + self.chunk_size]
@@ -53,18 +66,39 @@ class Player(object):
             self._thread.daemon = True
             self._thread.start()
 
+    def resume(self, i):
+        if not hasattr(self, '_thread'):
+            self.i = i
+            self._thread = threading.Thread(target=self._play)
+            self._thread.daemon = True
+            self._thread.start()
+        else:
+            self.i = i
+
     def pause(self):
-        self.paused = True
-        time.sleep(2 * float(self.chunk_size) / self.rate)
-        self.stream.close()
-        self._thread.join()
-        del self._thread
+        if self.paused is False:
+            self.paused = True
+            time.sleep(2 * float(self.chunk_size) / self.rate)
+            self.stream.close()
+            self._thread.join()
+            del self._thread
 
     def get_nowframe(self):
-        return self.i
+        return self.i + (self.now_buffer_index * self.buffer_size)
+
+    def set_nowframe(self, i):
+        if self.buffer_size <= i:
+            # Back
+            self.i = i - self.buffer_size
+            self.now_buffer_index = 1
+        elif i < self.buffer_size:
+            # Front
+            self.i = i
+            self.now_buffer_index = 0
+        self._reset_buffer()
 
     def get_audio(self):
-        return self.buffer
+        return self.org_buffer
 
 
 if __name__ == '__main__':

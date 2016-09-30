@@ -64,14 +64,7 @@ class TrackMasterApp(QWidget):
         self.scrl_contents_vlayout.setSpacing(0)
 
         # Track Controllers
-        self.track_controller1 = TrackController()
-        self.scrl_contents_vlayout.addWidget(self.track_controller1)
-
         self.track_controller_s = []
-        for i in range(10):
-            tc = TrackController()
-            self.scrl_contents_vlayout.addWidget(tc)
-            self.track_controller_s.append(tc)
 
         # Spacer
         spacerItem = QSpacerItem(20,40, QSizePolicy.Minimum, QSizePolicy.Expanding)
@@ -86,10 +79,19 @@ class TrackMasterApp(QWidget):
 
     def dropEvent(self, event):
         objs = [str(u.toLocalFile()) for u in event.mimeData().urls()]
+        if len(objs) > 20:
+            raise ImportError
         for u in objs:
             ext = os.path.splitext(u)[1]
             if ext in (".wav",".WAV"):
                 print(u)
+                self.create_track_controller(u)
+
+    def create_track_controller(self, url):
+        tc = TrackController(url)
+        self.scrl_contents_vlayout.insertWidget(0,tc)
+        self.track_controller_s.append((tc))
+
 
 
 def main():

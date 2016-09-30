@@ -1,0 +1,23 @@
+<RCC>
+  <qresource prefix="/">
+    <file>resource/left_default.png</file>
+    <file>resource/left_hover.png</file>
+    <file>resource/lelft_push.png</file>
+    <file>resource/pause_default.png</file>
+    <file>resource/pause_hover.png</file>
+    <file>resource/pause_push.png</file>
+    <file>resource/play_default.png</file>
+    <file>resource/play_hover.png</file>
+    <file>resource/play_push.png</file>
+    <file>resource/restart_default.png</file>
+    <file>resource/restart_hover.png</file>
+    <file>resource/restart_push.png</file>
+    <file>resource/right_default.png</file>
+    <file>resource/right_hover.png</file>
+    <file>resource/right_push.png</file>
+    <file>resource/stop_default.png</file>
+    <file>resource/stop_hover.png</file>
+    <file>resource/stop_push.png</file>
+    <file>resource/wav.png</file>
+  </qresource>
+</RCC>
